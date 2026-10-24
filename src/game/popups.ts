@@ -19,6 +19,7 @@ interface Popup {
   y: number
   vx: number
   vy: number
+  only: 'left' | 'right' | null
 }
 
 export class Popups {
@@ -77,7 +78,9 @@ export class Popups {
         if (p.y < 0 || p.y + r.height > window.innerHeight) p.vy *= -1
         this.place(p)
       }
-      p.btn.update(frame, dt)
+      // wrong hand doesn't count: show it as untracked
+      const f = p.only ? { ...frame, [p.only === 'left' ? 'right' : 'left']: { ...frame[p.only === 'left' ? 'right' : 'left'], tracked: false } } : frame
+      p.btn.update(f, dt)
     }
   }
 
@@ -89,8 +92,10 @@ export class Popups {
     el.innerHTML = `
       <div class="popup-head"><span>⚠ Notice</span><i>×</i></div>
       <p></p>
-      <div class="popup-close">Pinch to close</div>`
+      <div class="popup-close"></div>`
     el.querySelector('p')!.textContent = POPUP.text[Math.floor(Math.random() * POPUP.text.length)]
+    const only = Math.random() < POPUP.handOnlyChance ? (Math.random() < 0.5 ? 'left' : 'right') : null
+    el.querySelector('.popup-close')!.textContent = only ? `Pinch with your ${only.toUpperCase()} to close this popup` : 'Pinch to close'
     document.body.appendChild(el)
 
     const w = el.offsetWidth
@@ -112,6 +117,7 @@ export class Popups {
       y: Math.min(window.innerHeight - h, Math.max(0, y)),
       vx: Math.cos(a) * d.drift,
       vy: Math.sin(a) * d.drift,
+      only,
       btn: new HoldButton(el, { gesture: 'pinch', hands: 1, holdMs: d.closeMs, onHold: () => this.close(p) }),
     }
     this.place(p)

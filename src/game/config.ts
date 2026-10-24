@@ -128,6 +128,7 @@ export const DIFFICULTY: Record<Difficulty, DifficultyDef> = {
 export const POPUP = {
   width: 320,
   pickerHoldMs: 1200, // pinch hold to pick a difficulty
+  handOnlyChance: 0.3, // chance a popup only closes with one specific hand (random left/right)
   text: [
     'PLACEHOLDER MESSAGE: this will say something important.',
     'Placeholder: management would like a word.',

@@ -33,7 +33,12 @@ function drawHand(ctx: CanvasRenderingContext2D, hand: HandState, w: number, h: 
   const color = C.handColors[hand.side]
   // Fade while we're in the dropout grace period.
   const alpha = hand.lostMs > 0 ? 0.35 : 1
-  const lm = hand.landmarks
+  const p = cursor(hand)
+  const x = p.x * w
+  const y = p.y * h
+  // Shrink the drawn skeleton around the cursor so the ring stays on the fingertips.
+  const k = C.handDrawScale
+  const lm = hand.landmarks.map((q) => ({ ...q, x: p.x + (q.x - p.x) * k, y: p.y + (q.y - p.y) * k }))
   ctx.save()
   ctx.globalAlpha = alpha
   ctx.lineCap = 'round'
@@ -50,7 +55,7 @@ function drawHand(ctx: CanvasRenderingContext2D, hand: HandState, w: number, h: 
     ctx.shadowColor = color
     ctx.shadowBlur = 16
     ctx.strokeStyle = color
-    ctx.lineWidth = 7
+    ctx.lineWidth = 7 * Math.max(k, 0.4)
     strokeSkeleton(ctx, lm, w, h)
     ctx.shadowBlur = 0
     ctx.fillStyle = '#fff'
@@ -62,9 +67,6 @@ function drawHand(ctx: CanvasRenderingContext2D, hand: HandState, w: number, h: 
   }
 
   // Cursor ring; fills in as the pinch closes.
-  const p = cursor(hand)
-  const x = p.x * w
-  const y = p.y * h
   ctx.strokeStyle = color
   ctx.lineWidth = 3
   ctx.beginPath()

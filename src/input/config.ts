@@ -42,6 +42,8 @@ export const INPUT_CONFIG = {
   gestureStableMs: 80,
 
   // Floating hands
+  // Size of the drawn hand skeleton relative to the tracked one (1 = full size).
+  handDrawScale: 0.6,
   handColors: { left: '#4fc3f7', right: '#ffb74d' },
 
   // Webcam window in the top-right corner (CSS px)
