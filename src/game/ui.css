@@ -77,7 +77,6 @@ body[data-level='crit'] .frame { animation: frame-alarm 0.9s steps(2) infinite; 
 .gauge[data-level='crit'] { --c: var(--red); }
 
 .g-head { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
-.g-code { font-family: var(--mono); font-size: 9px; color: var(--dim); }
 .g-name { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 
 .g-body { flex: 1; min-height: 0; display: flex; gap: 3px; padding: 6px 0; }
@@ -99,8 +98,8 @@ body[data-level='crit'] .frame { animation: frame-alarm 0.9s steps(2) infinite; 
 .zn.crit { background: var(--red); }
 .zn.tgt { background: var(--green); }
 
-.g-col { position: relative; width: 14px; height: 100%; background: var(--well); border: 1px solid var(--line-2); }
-.g-grid .g-col { width: 22px; }
+.g-col { position: relative; width: 28px; height: 100%; background: var(--well); border: 1px solid var(--line-2); }
+.g-grid .g-col { width: 36px; }
 .gauge[data-level='crit'] .g-col { border-color: var(--red); }
 .g-fill {
   position: absolute;
@@ -175,7 +174,8 @@ body[data-level='crit'] .frame { animation: frame-alarm 0.9s steps(2) infinite; 
 
 .hud { position: absolute; top: 16px; display: flex; align-items: center; gap: 16px; }
 .hud.tl { left: 20px; }
-.hud.tr { right: 20px; }
+.hud.tr { right: 140px; } /* clear of the webcam window */
+.rail.right { padding-top: 190px; } /* start below the webcam window */
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-mark { position: relative; width: 20px; height: 20px; border: 2px solid var(--cyan); border-radius: 50%; }
 .brand-mark::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--cyan); }
@@ -217,9 +217,6 @@ body[data-level='crit'] .frame { animation: frame-alarm 0.9s steps(2) infinite; 
 .btn:hover, .btn.is-hover { color: var(--text); border-color: var(--steel-dark); }
 .btn:active { transform: translateY(1px); }
 
-.core-temp { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); text-align: center; pointer-events: none; }
-.core-temp b { display: block; font-family: var(--mono); font-size: 38px; font-weight: 400; line-height: 1; font-variant-numeric: tabular-nums; }
-.core-temp span { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
 
 /* ---------- bare controls ---------- */
 .ctl-label {

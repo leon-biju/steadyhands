@@ -6,7 +6,6 @@
 import { GAUGES, UI, type GaugeDef, type GaugeKey } from './config.ts'
 import { levelOf, type Level, type ReactorSim } from './sim.ts'
 
-const STATUS_TEXT: Record<Level | 'melt', string> = { ok: 'Nominal', warn: 'Caution', crit: 'Critical', melt: 'Containment lost' }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 const pct = (v: number, d: GaugeDef) => (v / d.max) * 100
@@ -40,7 +39,7 @@ function gauge(d: GaugeDef, kind: GaugeKind) {
   const target = d.target !== undefined ? `<i class="g-target" style="bottom:${pct(d.target, d)}%"></i>` : ''
   return `
   <div class="gauge g-${kind}" data-g="${d.key}" data-level="ok">
-    <div class="g-head"><span class="g-code">${d.code}</span><span class="g-name">${d.label}</span></div>
+    <div class="g-head"><span class="g-name">${d.label}</span></div>
     <div class="g-body">
       <div class="g-scale">${ticks}</div>
       <div class="g-zones">${zones}</div>
@@ -79,17 +78,12 @@ function template() {
   <section class="window">
     <canvas class="core-canvas"></canvas>
 
-    <div class="hud tl">
-      <div class="brand"><span class="brand-mark"></span><strong>Steadyhands</strong></div>
-      <div class="status" data-level="ok"><i></i><span class="status-text">Nominal</span></div>
-    </div>
     <div class="hud tr">
-      <div class="readout"><span>Shift</span><b class="t-time">00:00</b></div>
+      <div class="readout"><span>Time</span><b class="t-time">00:00</b></div>
       <div class="readout"><span>Score</span><b class="t-score">000000</b></div>
       <button class="btn" data-act="pause">Pause</button>
       <button class="btn" data-act="reset">Reset</button>
     </div>
-    <div class="core-temp"><b class="core-temp-num">0.0</b><span>MK core</span></div>
 
     <div class="lever" data-ctl="coolant" style="--p:0">
       <div class="lever-body">
@@ -156,13 +150,9 @@ export function createUI(root: HTMLElement, sim: ReactorSim): GameUI {
     }
   })
 
-  const status = $('.status')
-  const statusText = $('.status-text')
   const tTime = $('.t-time')
   const tScore = $('.t-score')
   const overlay = $('.overlay')
-  const coreTemp = $('.core-temp-num')
-  const tempFmt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
   // ---- coolant lever: front-facing, pull the handle down the slot ----
   const lever = $('.lever')
@@ -312,14 +302,11 @@ export function createUI(root: HTMLElement, sim: ReactorSim): GameUI {
     const st = s.melted ? 'melt' : worst
     if (st !== lastStatus) {
       lastStatus = st
-      status.dataset.level = st
-      statusText.textContent = STATUS_TEXT[st]
       document.body.dataset.level = st
     }
 
     tTime.textContent = mmss(s.time)
     tScore.textContent = String(Math.floor(sim.score)).padStart(6, '0')
-    coreTemp.textContent = tempFmt.format(gauges[0].shown)
 
     if (s.melted && overlay.hidden) {
       overlay.hidden = false
