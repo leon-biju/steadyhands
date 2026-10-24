@@ -464,3 +464,6 @@ body.is-paused .core-canvas { opacity: 0.5; }
 /* ---------- lights out minigame ---------- */
 /* above popups, narrator and the webcam window, below the floating hands */
 .lights-out { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 95; pointer-events: none; }
+.homer-game { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 95; pointer-events: none; }
+.overlay.won .overlay-card { border-color: var(--green); }
+.overlay.won .ov-code, .overlay.won .overlay-card h1 { color: var(--green); }

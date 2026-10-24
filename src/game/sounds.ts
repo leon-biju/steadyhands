@@ -4,6 +4,7 @@ import steamUrl from '../assets/sounds/dragon-studio-steam-hissing-2-386162.mp3'
 import alarmUrl from '../assets/sounds/freesound_community-nuclear-alarm-104598.mp3'
 import riserUrl from '../assets/sounds/youssefmizani-sharp-riser-407120.mp3'
 import dingUrl from '../assets/sounds/freesound_community-ding-101492.mp3'
+import endMusicUrl from '../assets/music/end_music.mp3'
 import { SOUND } from './config.ts'
 
 function audio(url: string, volume: number, loop = false) {
@@ -51,10 +52,18 @@ class Loop {
 export class GameSounds {
   private steam = new Loop(steamUrl, SOUND.steamVolume, SOUND.steamFadeIn, SOUND.steamFadeOut)
   private alarm = new Loop(alarmUrl, SOUND.alarmVolume, 0.05, SOUND.alarmFadeOut)
+  private endMusic = audio(endMusicUrl, SOUND.endMusicVolume)
+  private won = false
 
-  update(dt: number, venting: boolean, critical: boolean) {
+  /** won: shift survived, plays the end music once; going back to false (restart) stops it */
+  update(dt: number, venting: boolean, critical: boolean, won: boolean) {
     this.steam.update(venting, dt)
     this.alarm.update(critical, dt)
+    if (won !== this.won) {
+      this.won = won
+      if (won) play(this.endMusic)
+      else stop(this.endMusic)
+    }
   }
 }
 

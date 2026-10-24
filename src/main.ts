@@ -105,8 +105,8 @@ async function startInput() {
     game.narrator.update(frame, dt)
     // keyboard still works as a fallback, so only take over the lever once the game starts
     // minigames take over the screen: controls and popups wait until they're done
-    if (controls) game.lightsOut.update(frame, dt)
-    if (game.lightsOut.active) {
+    if (controls) game.minigames.update(frame, dt)
+    if (game.minigames.active) {
       game.ui.setLever(null)
       game.ui.release('vent')
     } else {

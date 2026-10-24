@@ -65,8 +65,8 @@ export class Popups {
   update(frame: InputFrame, dt: number) {
     const d = this.def
     // clear on game over so they don't cover the restart button
-    if (this.sim.state.melted && this.list.length) this.reset()
-    if (!this.sim.started || this.sim.state.melted || this.ui.paused) {
+    if (this.sim.over && this.list.length) this.reset()
+    if (!this.sim.started || this.sim.over || this.ui.paused) {
       this.sound.update(0, false, this.closed, d.closeMs)
       return
     }

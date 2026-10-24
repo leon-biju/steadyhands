@@ -3,7 +3,7 @@
 // Hand-tracking hooks (returned from startGame): ui.press('vent'), ui.release('vent'),
 // ui.setLever(0..1) / ui.setLever(null) to let it spring back, ui.hitTest(x, y).
 // Add the `is-hover` class to a control for a fingertip hover state.
-import { GAUGES, UI, type GaugeDef, type GaugeKey } from './config.ts'
+import { GAUGES, SHIFT, UI, type GaugeDef, type GaugeKey } from './config.ts'
 import { levelOf, type Level, type ReactorSim } from './sim.ts'
 
 
@@ -79,7 +79,7 @@ function template() {
     <canvas class="core-canvas"></canvas>
 
     <div class="hud tr">
-      <div class="readout"><span>Time</span><b class="t-time">00:00</b></div>
+      <div class="readout"><span>Left</span><b class="t-time">02:00</b></div>
       <div class="readout"><span>Score</span><b class="t-score">000000</b></div>
       <button class="btn" data-act="pause">Pause</button>
       <button class="btn" data-act="reset">Reset</button>
@@ -193,7 +193,7 @@ export function createUI(root: HTMLElement, sim: ReactorSim): GameUI {
   const ventBtn = $('.vent-btn')
   const ventState = $('.vent-state')
   function press() {
-    if (sim.state.melted) return
+    if (sim.over) return
     sim.controls.vent = true
     vent.classList.add('is-held')
     ventState.textContent = 'Open'
@@ -272,7 +272,7 @@ export function createUI(root: HTMLElement, sim: ReactorSim): GameUI {
     lever.style.setProperty('--p', leverAmt.toFixed(4))
     leverPct.textContent = `${Math.round(leverAmt * 100)}%`
     lever.classList.toggle('is-on', leverAmt > 0.05)
-    sim.controls.coolant = s.melted ? 0 : leverAmt
+    sim.controls.coolant = sim.over ? 0 : leverAmt
 
     // gauges
     const k = 1 - Math.exp(-dt * UI.gaugeSmoothing)
@@ -302,17 +302,21 @@ export function createUI(root: HTMLElement, sim: ReactorSim): GameUI {
     }
     gauges[2].el.classList.toggle('on-target', Math.abs(s.output - GAUGES.output.target!) < GAUGES.output.target! * UI.targetBand)
 
-    const st = s.melted ? 'melt' : worst
+    const st = s.melted ? 'melt' : s.won ? 'ok' : worst
     if (st !== lastStatus) {
       lastStatus = st
       document.body.dataset.level = st
     }
 
-    tTime.textContent = mmss(s.time)
+    tTime.textContent = mmss(Math.max(0, Math.ceil(SHIFT.lengthSec - s.time)))
     tScore.textContent = String(Math.floor(sim.score)).padStart(6, '0')
 
-    if (s.melted && overlay.hidden) {
+    if (sim.over && overlay.hidden) {
       overlay.hidden = false
+      overlay.classList.toggle('won', s.won)
+      $('.ov-code').textContent = s.won ? 'SHIFT COMPLETE · ALL SYSTEMS NOMINAL' : 'ERR 0x7F · SCRAM FAILURE'
+      $('.overlay-card h1').textContent = s.won ? 'You survived' : 'Containment lost'
+      $('[data-act="restart"]').textContent = s.won ? 'Play again' : 'Restart reactor'
       $('.ov-time').textContent = mmss(s.time)
       $('.ov-score').textContent = String(Math.floor(sim.score))
       release()

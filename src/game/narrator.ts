@@ -142,8 +142,8 @@ export class Narrator {
     this.lastTime = s.time
     this.cooldown -= dt / 1000
 
-    if (s.melted) {
-      if (this.milestone >= 0) this.say(pick(NARRATOR.melt))
+    if (this.sim.over) {
+      if (this.milestone >= 0) this.say(pick(s.won ? NARRATOR.win : NARRATOR.melt))
       this.milestone = -1
       return
     }

@@ -5,7 +5,6 @@
 import type { InputFrame } from '../shared/types.ts'
 import { cursor } from '../input/gestures.ts'
 import { LIGHTS_OUT as L } from './config.ts'
-import { gauss } from './popups.ts'
 import type { ReactorSim } from './sim.ts'
 import type { GameUI } from './ui.ts'
 
@@ -26,7 +25,6 @@ export class LightsOut {
   private h = 0
   private dpr = 1
 
-  private timer = L.firstAfter // seconds until the next one
   private phaseMs = 0
   private darkMs = 0 // total time spent looking for the breaker
   private breaker = { x: 0, y: 0, held: 0 }
@@ -53,10 +51,8 @@ export class LightsOut {
     return this.phase !== 'idle'
   }
 
-  /** back to idle, next one after the first-shift delay */
   reset() {
     this.end()
-    this.timer = L.firstAfter
   }
 
   /** start right now (also handy from the dev console: game.lightsOut.start()) */
@@ -74,15 +70,8 @@ export class LightsOut {
 
   /** dt in ms */
   update(frame: InputFrame, dt: number) {
-    const s = this.sim.state
-    if (this.active && s.melted) this.end()
-    if (!this.sim.started || s.melted || this.ui.paused) return
-
-    if (!this.active) {
-      this.timer -= dt / 1000
-      if (this.timer <= 0) this.start()
-      return
-    }
+    if (this.active && this.sim.over) this.end()
+    if (!this.active || this.sim.over || this.ui.paused) return
 
     this.track(frame, dt)
     this.phaseMs += dt
@@ -112,10 +101,7 @@ export class LightsOut {
         if (this.phaseMs > L.scareMs) this.go(this.scareThen === 'dark' ? 'dark' : 'flickerIn')
         break
       case 'flickerIn':
-        if (this.phaseMs > L.flickerMs) {
-          this.end()
-          this.timer = gauss(L.every[this.sim.difficulty])
-        }
+        if (this.phaseMs > L.flickerMs) this.end()
         break
     }
     this.draw(frame)

@@ -45,6 +45,16 @@ export const SIM = {
   meltdownDecay: 2.5,
 }
 
+// One shift = one game. Survive this long to win.
+export const SHIFT = {
+  lengthSec: 120, // sim time, so it runs slower during minigames
+  // each minigame happens once per shift, in random order, at a random time inside one of these windows
+  minigameWindows: [
+    [28, 42],
+    [68, 82],
+  ] as [number, number][],
+}
+
 export const UI = {
   gaugeSmoothing: 8,
   peakHoldSec: 2.5, // peak marker holds this long before falling
@@ -179,10 +189,11 @@ export const NARRATOR = {
   crit: ["IT'S IN THE RED! DO SOMETHING!", "We're about to blow! Pull the lever!!", 'This is NOT good! Cool it down NOW!'],
   milestones: [
     { at: 30, text: '30 seconds in and still alive! Most people are gone by now.' },
-    { at: 60, text: "ONE MINUTE! You're doing insane!" },
-    { at: 120, text: "TWO MINUTES?! Somebody get this person a trophy. And my $10,000." },
-    { at: 180, text: "Three minutes. I'm legitimately running out of money to give away." },
+    { at: 60, text: "ONE MINUTE! Halfway there, you're doing insane!" },
+    { at: 90, text: '30 seconds left! Do NOT mess this up now!' },
+    { at: 110, text: 'TEN SECONDS! Hold it together!' },
   ],
+  win: ["YOU SURVIVED THE SHIFT! Somebody get this person their $10,000!", "Two whole minutes and the reactor's still standing. That's INSANE. You win!"],
   melt: ["BOOM. And that's $10,000 you just watched explode. Let's go again!", "The reactor is gone! Don't worry, I've got another one. Try again!"],
 }
 
@@ -194,13 +205,12 @@ export const SOUND = {
   alarmFadeOut: 0.4,
   riserVolume: 0.7,
   dingVolume: 0.7,
+  endMusicVolume: 0.8,
 }
 
 // "Lights Out" horror minigame: power cuts, your open palm is a flashlight, find the breaker and
 // hold a fist on it. Partway through something appears and you have to hold perfectly still.
 export const LIGHTS_OUT = {
-  every: { easy: { mean: 55, sd: 10, min: 40, max: 75 }, hard: { mean: 40, sd: 10, min: 25, max: 60 } } as Record<Difficulty, Dist>,
-  firstAfter: 25, // seconds into a shift before the first one can happen
   simSpeed: 0.3, // reactor keeps running this fast while you're in the dark
   flickerMs: 900, // lights stutter before going out / coming back
   timeLimitMs: 18000, // breaker not found by then = it gets you anyway
@@ -217,4 +227,24 @@ export const LIGHTS_OUT = {
   scareMs: 1100,
   scarePenalty: 25, // added to the hidden meltdown meter
   volume: 0.6,
+}
+
+// Homer minigame: he's asleep face-down on the console, heating the reactor. Pinch a donut and
+// drag it to his mouth without going too fast or letting go.
+export const HOMER = {
+  donuts: { easy: 1, hard: 2 } as Record<Difficulty, number>,
+  timeLimitMs: 15000, // not fed by then = "D'oh!" and a penalty
+  heatPerSec: 6, // MK/s his face adds while it's on the buttons (on top of the slowed sim)
+  failPenalty: 20, // added to the hidden meltdown meter
+  // Homer box, fractions of the screen; mouth is a fraction of that box (tune once the image is in)
+  box: { x: 0.52, y: 0.38, w: 0.42, h: 0.58 },
+  mouth: { x: 0.42, y: 0.62 },
+  mouthRadius: 0.08, // fraction of screen height
+  donutRadius: 0.05,
+  grabRadius: 0.08,
+  maxDragSpeed: 1.4, // screen widths/s, faster and the donut slips
+  speedSmoothMs: 120,
+  dropRespawnMs: 900,
+  eatMs: 1800, // "Mmm... donut" before he wakes up and it ends
+  failMs: 1600,
 }

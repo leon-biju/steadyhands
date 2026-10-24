@@ -1,6 +1,6 @@
 // PLACEHOLDER reactor sim, just enough to make the UI move.
 // The UI reads `state` and `score`, writes `controls`, and calls reset().
-import { DIFFICULTY, GAUGES, SIM, type Difficulty, type GaugeKey } from './config.ts'
+import { DIFFICULTY, GAUGES, SHIFT, SIM, type Difficulty, type GaugeKey } from './config.ts'
 
 export type Level = 'ok' | 'warn' | 'crit'
 
@@ -14,6 +14,8 @@ export interface ReactorState {
   meltdown: number
   time: number
   melted: boolean
+  /** survived the whole shift */
+  won: boolean
 }
 
 export interface Controls {
@@ -48,6 +50,7 @@ function fresh(): ReactorState {
     meltdown: 0,
     time: 0,
     melted: false,
+    won: false,
   }
 }
 
@@ -58,6 +61,11 @@ export class ReactorSim {
   difficulty: Difficulty = 'easy'
   /** held until a difficulty is picked */
   started = false
+
+  /** shift ended, either way */
+  get over() {
+    return this.state.melted || this.state.won
+  }
 
   private wobble = 0
   private nextSpike = SIM.spikeMax
@@ -90,7 +98,7 @@ export class ReactorSim {
 
   update(dt: number) {
     const s = this.state
-    if (s.melted || !this.started) return
+    if (this.over || !this.started) return
     const c = this.controls
     const d = DIFFICULTY[this.difficulty]
     s.time += dt
@@ -130,6 +138,11 @@ export class ReactorSim {
     s.meltdown = clamp(s.meltdown + (crits ? crits * SIM.meltdownRate : -SIM.meltdownDecay) * dt, 0, 100)
     if (s.meltdown >= 100) {
       s.melted = true
+      return
+    }
+
+    if (s.time >= SHIFT.lengthSec) {
+      s.won = true
       return
     }
 
