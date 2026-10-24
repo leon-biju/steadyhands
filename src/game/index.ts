@@ -32,9 +32,10 @@ export function startGame(root: HTMLElement): { sim: ReactorSim; ui: GameUI; pop
     if (!ui.paused) sim.update(minigames.active ? dt * LIGHTS_OUT.simSpeed : dt)
     view.render(ui.paused ? dt * 0.15 : dt, sim.visuals())
     const s = sim.state
-    // no alarm over the win music
-    const critical = !s.won && (s.melted || levelOf('temperature', s.temperature) === 'crit' || levelOf('pressure', s.pressure) === 'crit')
-    sounds.update(dt, sim.controls.vent && !s.melted && !ui.paused, critical && sim.started && !ui.paused, s.won)
+    // game over (won or melted): only the end music plays
+    const critical = levelOf('temperature', s.temperature) === 'crit' || levelOf('pressure', s.pressure) === 'crit'
+    const live = sim.started && !sim.over && !ui.paused
+    sounds.update(dt, sim.controls.vent && live, critical && live, sim.over)
     requestAnimationFrame(frame)
   }
   requestAnimationFrame(frame)

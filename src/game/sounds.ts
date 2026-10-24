@@ -53,15 +53,15 @@ export class GameSounds {
   private steam = new Loop(steamUrl, SOUND.steamVolume, SOUND.steamFadeIn, SOUND.steamFadeOut)
   private alarm = new Loop(alarmUrl, SOUND.alarmVolume, 0.05, SOUND.alarmFadeOut)
   private endMusic = audio(endMusicUrl, SOUND.endMusicVolume)
-  private won = false
+  private over = false
 
-  /** won: shift survived, plays the end music once; going back to false (restart) stops it */
-  update(dt: number, venting: boolean, critical: boolean, won: boolean) {
-    this.steam.update(venting, dt)
-    this.alarm.update(critical, dt)
-    if (won !== this.won) {
-      this.won = won
-      if (won) play(this.endMusic)
+  /** over: game finished (won or melted), plays the end music once; back to false (restart) stops it */
+  update(dt: number, venting: boolean, critical: boolean, over: boolean) {
+    this.steam.update(venting && !over, dt)
+    this.alarm.update(critical && !over, dt)
+    if (over !== this.over) {
+      this.over = over
+      if (over) play(this.endMusic)
       else stop(this.endMusic)
     }
   }

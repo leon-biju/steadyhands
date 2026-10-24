@@ -229,16 +229,17 @@ export const LIGHTS_OUT = {
   volume: 0.6,
 }
 
-// Homer minigame: he's asleep face-down on the console, heating the reactor. Pinch a donut and
-// drag it to his mouth without going too fast or letting go.
+// Homer minigame: he's hogging the console, heating the reactor. Pinch a donut and drag it to
+// his mouth without going too fast or letting go.
 export const HOMER = {
   donuts: { easy: 1, hard: 2 } as Record<Difficulty, number>,
   timeLimitMs: 15000, // not fed by then = "D'oh!" and a penalty
-  heatPerSec: 6, // MK/s his face adds while it's on the buttons (on top of the slowed sim)
+  heatPerSec: 6, // MK/s he adds while he's leaning on the buttons (on top of the slowed sim)
   failPenalty: 20, // added to the hidden meltdown meter
-  // Homer box, fractions of the screen; mouth is a fraction of that box (tune once the image is in)
-  box: { x: 0.52, y: 0.38, w: 0.42, h: 0.58 },
-  mouth: { x: 0.42, y: 0.62 },
+  // Homer is fitted inside this box (fractions of the screen), bottom-aligned; mouth is a
+  // fraction of the drawn (flipped) image
+  box: { x: 0.55, y: 0.24, w: 0.4, h: 0.74 },
+  mouth: { x: 0.54, y: 0.27 },
   mouthRadius: 0.08, // fraction of screen height
   donutRadius: 0.05,
   grabRadius: 0.08,

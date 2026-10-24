@@ -1,7 +1,8 @@
-// Homer minigame. He's fallen asleep face-down on the console and the reactor heats up while his
-// face is on the buttons. Pinch a donut and drag it to his mouth: too fast or letting go drops it.
-// Art: drop src/assets/homer.png (or homer-asleep.png + homer-awake.png) in and it's picked up
-// automatically; until then he's drawn as a placeholder.
+// Homer minigame. He's hogging the console and the reactor heats up while he's leaning on the
+// buttons. Bribe him off it with a donut. Pinch a donut and drag it to his mouth: too fast or letting go drops it.
+// Homer's image is drawn flipped so he faces left, towards the donut.
+import homerUrl from '../assets/Homer_Simpson.webp'
+import donutUrl from '../assets/homer_donut.png'
 import type { InputFrame } from '../shared/types.ts'
 import { GAUGES, HOMER as H } from './config.ts'
 import type { ReactorSim } from './sim.ts'
@@ -10,16 +11,14 @@ import type { GameUI } from './ui.ts'
 type Phase = 'idle' | 'sleep' | 'eat' | 'fail'
 type Side = 'left' | 'right'
 
-const art = import.meta.glob('../assets/homer*.{png,webp,jpg}', { eager: true, import: 'default' }) as Record<string, string>
-function loadArt(match: string) {
-  const url = Object.entries(art).find(([k]) => k.includes(match))?.[1] ?? Object.values(art)[0]
-  if (!url) return null
+function load(url: string) {
   const img = new Image()
   img.src = url
   return img
 }
-const ASLEEP = loadArt('asleep')
-const AWAKE = loadArt('awake')
+const HOMER_IMG = load(homerUrl)
+const DONUT_IMG = load(donutUrl)
+const ready = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a)
 
@@ -102,9 +101,19 @@ export class Homer {
     this.phaseMs = 0
   }
 
+  /** where Homer is drawn: his image fitted inside H.box, bottom-aligned */
+  private get rect() {
+    const b = { x: H.box.x * this.w, y: H.box.y * this.h, w: H.box.w * this.w, h: H.box.h * this.h }
+    if (!ready(HOMER_IMG)) return b
+    const k = Math.min(b.w / HOMER_IMG.naturalWidth, b.h / HOMER_IMG.naturalHeight)
+    const w = HOMER_IMG.naturalWidth * k
+    const h = HOMER_IMG.naturalHeight * k
+    return { x: b.x + (b.w - w) / 2, y: b.y + b.h - h, w, h }
+  }
+
   private get mouth() {
-    const b = H.box
-    return { x: (b.x + H.mouth.x * b.w) * this.w, y: (b.y + H.mouth.y * b.h) * this.h }
+    const r = this.rect
+    return { x: r.x + H.mouth.x * r.w, y: r.y + H.mouth.y * r.h }
   }
 
   private spawnDonut() {
@@ -183,29 +192,22 @@ export class Homer {
     ctx.fillRect(0, 0, w, h)
 
     const awake = this.phase === 'eat'
-    const b = { x: H.box.x * w, y: H.box.y * h, w: H.box.w * w, h: H.box.h * h }
-    const img = awake ? (AWAKE ?? ASLEEP) : ASLEEP
-    if (img?.complete && img.naturalWidth) {
-      // fit inside the box, bottom-aligned
-      const k = Math.min(b.w / img.naturalWidth, b.h / img.naturalHeight)
-      const iw = img.naturalWidth * k
-      const ih = img.naturalHeight * k
+    const b = this.rect
+    if (ready(HOMER_IMG)) {
+      // happy hop while he eats, otherwise a slow idle sway
+      const hop = awake ? -Math.abs(Math.sin(this.phaseMs / 120)) * h * 0.02 : 0
+      const sway = awake ? 0 : Math.sin(this.phaseMs / 700) * 0.02
       ctx.save()
-      if (awake && !AWAKE) {
-        // only one pose: sit him up a bit
-        ctx.translate(b.x + b.w / 2, b.y + b.h)
-        ctx.rotate(-0.15)
-        ctx.translate(-(b.x + b.w / 2), -(b.y + b.h))
-      }
-      ctx.drawImage(img, b.x + (b.w - iw) / 2, b.y + b.h - ih, iw, ih)
+      ctx.translate(b.x + b.w / 2, b.y + b.h + hop)
+      ctx.rotate(sway)
+      ctx.scale(-1, 1)
+      ctx.drawImage(HOMER_IMG, -b.w / 2, -b.h, b.w, b.h)
       ctx.restore()
-    } else {
-      this.drawPlaceholder(b, awake)
     }
 
     const m = this.mouth
     if (this.phase === 'sleep') {
-      // target ring on the mouth, and snoring
+      // target ring on the mouth
       ctx.strokeStyle = `rgba(255,214,0,${0.5 + 0.3 * Math.sin(this.phaseMs / 200)})`
       ctx.lineWidth = 3
       ctx.setLineDash([8, 6])
@@ -213,19 +215,10 @@ export class Homer {
       ctx.arc(m.x, m.y, H.mouthRadius * h, 0, Math.PI * 2)
       ctx.stroke()
       ctx.setLineDash([])
-      ctx.fillStyle = '#fff'
-      ctx.textAlign = 'left'
-      for (let i = 0; i < 3; i++) {
-        const t = ((this.phaseMs / 1400 + i / 3) % 1)
-        ctx.globalAlpha = 1 - t
-        ctx.font = `900 ${Math.round(h * (0.03 + t * 0.03))}px Impact, "Arial Black", sans-serif`
-        ctx.fillText('Z', b.x + b.w * 0.75 + t * 40, b.y + b.h * 0.3 - t * 80)
-      }
-      ctx.globalAlpha = 1
       this.drawDonut()
       this.drawHud()
     } else {
-      this.bubble(m.x, b.y + b.h * 0.05, awake ? 'Mmm... donut' : "D'oh!")
+      this.bubble(m.x, b.y - h * 0.02, awake ? 'Mmm... donut' : "D'oh!")
     }
   }
 
@@ -235,7 +228,7 @@ export class Homer {
     ctx.textAlign = 'center'
     ctx.fillStyle = '#ffd600'
     ctx.font = `900 ${Math.round(h * 0.06)}px Impact, "Arial Black", sans-serif`
-    ctx.fillText('HOMER FELL ASLEEP ON THE CONSOLE', w / 2, h * 0.1)
+    ctx.fillText('HOMER IS HOGGING THE CONSOLE', w / 2, h * 0.1)
     ctx.font = '600 15px ui-monospace, monospace'
     ctx.fillStyle = '#fff'
     const msg = this.donut.falling ? (this.slipped ? 'Too fast! It slipped.' : 'You dropped it!') : `Pinch the donut and drag it to his mouth. Slowly. ${need > 1 ? `(${this.fed}/${need})` : ''}`
@@ -252,29 +245,7 @@ export class Homer {
     const { ctx } = this
     const { x, y, held } = this.donut
     const r = H.donutRadius * this.h * (held ? 1.1 : 1)
-    ctx.fillStyle = '#d9a35b'
-    ctx.beginPath()
-    ctx.arc(x, y, r, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.fillStyle = '#ff7eb6'
-    ctx.beginPath()
-    ctx.arc(x, y, r * 0.85, 0, Math.PI * 2)
-    ctx.fill()
-    const colors = ['#fff', '#4fd8e8', '#ffd600', '#46c27a', '#e5484d']
-    for (let i = 0; i < 14; i++) {
-      const a = (i / 14) * Math.PI * 2
-      const rr = r * (0.5 + (i % 3) * 0.12)
-      ctx.save()
-      ctx.translate(x + Math.cos(a) * rr, y + Math.sin(a) * rr)
-      ctx.rotate(a * 3)
-      ctx.fillStyle = colors[i % colors.length]
-      ctx.fillRect(-r * 0.09, -r * 0.03, r * 0.18, r * 0.06)
-      ctx.restore()
-    }
-    ctx.fillStyle = 'rgba(4,6,8,1)'
-    ctx.beginPath()
-    ctx.arc(x, y, r * 0.3, 0, Math.PI * 2)
-    ctx.fill()
+    if (ready(DONUT_IMG)) ctx.drawImage(DONUT_IMG, x - r, y - r, r * 2, r * 2)
     if (!held && !this.donut.falling) {
       ctx.strokeStyle = 'rgba(255,255,255,0.6)'
       ctx.lineWidth = 2
@@ -282,68 +253,6 @@ export class Homer {
       ctx.arc(x, y, H.grabRadius * this.h * (1 + 0.08 * Math.sin(this.phaseMs / 150)), 0, Math.PI * 2)
       ctx.stroke()
     }
-  }
-
-  // stand-in until the real image is in: big yellow head lying on its side
-  private drawPlaceholder(b: { x: number; y: number; w: number; h: number }, awake: boolean) {
-    const { ctx } = this
-    const cx = b.x + b.w * 0.5
-    const cy = b.y + b.h * 0.6
-    const rx = b.w * 0.34
-    const ry = b.h * 0.3
-    // console he's lying on
-    ctx.fillStyle = '#2a3038'
-    ctx.fillRect(b.x, b.y + b.h * 0.85, b.w, b.h * 0.15)
-    ctx.save()
-    ctx.translate(cx, cy)
-    ctx.rotate(awake ? -0.1 : 0.35)
-    ctx.fillStyle = '#ffd90f'
-    ctx.beginPath()
-    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2)
-    ctx.fill()
-    // stubble
-    ctx.fillStyle = '#c9a06a'
-    ctx.beginPath()
-    ctx.ellipse(-rx * 0.15, ry * 0.45, rx * 0.55, ry * 0.42, 0, 0, Math.PI)
-    ctx.fill()
-    // eyes
-    ctx.strokeStyle = '#000'
-    ctx.lineWidth = 3
-    for (const dx of [-0.35, 0.05]) {
-      ctx.fillStyle = '#fff'
-      ctx.beginPath()
-      ctx.arc(rx * dx, -ry * 0.25, ry * 0.2, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.stroke()
-      ctx.beginPath()
-      if (awake) {
-        ctx.fillStyle = '#000'
-        ctx.arc(rx * dx, -ry * 0.25, ry * 0.04, 0, Math.PI * 2)
-        ctx.fill()
-      } else {
-        // eyelid
-        ctx.fillStyle = '#ffd90f'
-        ctx.arc(rx * dx, -ry * 0.25, ry * 0.2, Math.PI, 0)
-        ctx.fill()
-        ctx.stroke()
-      }
-    }
-    // hairs
-    ctx.beginPath()
-    ctx.arc(-rx * 0.1, -ry * 1.0, ry * 0.25, Math.PI, 0)
-    ctx.arc(rx * 0.25, -ry * 0.95, ry * 0.25, Math.PI, 0)
-    ctx.stroke()
-    ctx.restore()
-    // mouth sits where the config says, so feeding lines up with the real image later
-    const m = this.mouth
-    ctx.fillStyle = '#5a1a12'
-    ctx.beginPath()
-    ctx.ellipse(m.x, m.y, rx * 0.22, awake ? ry * 0.22 : ry * 0.08, 0, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.fillStyle = '#ffd600'
-    ctx.font = '700 11px ui-monospace, monospace'
-    ctx.textAlign = 'center'
-    ctx.fillText('[placeholder: homer.png]', cx, b.y + b.h * 0.95)
   }
 
   private bubble(x: number, y: number, text: string) {
