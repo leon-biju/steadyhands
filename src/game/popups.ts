@@ -5,6 +5,9 @@ import { HoldButton } from '../input/holdButton.ts'
 import { DIFFICULTY, POPUP, type Dist } from './config.ts'
 import type { ReactorSim } from './sim.ts'
 import type { GameUI } from './ui.ts'
+import messages from './popupMessages.json'
+
+type PopupMessage = (typeof messages.messages)[number]
 import { ChargeSound } from './sounds.ts'
 
 // Box-Muller, clamped
@@ -102,10 +105,20 @@ export class Popups {
     el.className = 'popup'
     el.style.width = `${POPUP.width}px`
     el.innerHTML = `
-      <div class="popup-head"><span>⚠ Notice</span><i>×</i></div>
+      <div class="popup-head"><span></span><i>×</i></div>
       <p></p>
       <div class="popup-close"></div>`
-    el.querySelector('p')!.textContent = POPUP.text[Math.floor(Math.random() * POPUP.text.length)]
+    const msg: PopupMessage = messages.messages[Math.floor(Math.random() * messages.messages.length)]
+    el.querySelector('span')!.textContent = `⚠ ${msg.title}`
+    const p = el.querySelector('p')!
+    p.textContent = msg.text
+    p.style.fontFamily = msg.font
+    p.style.fontSize = `${msg.size}px`
+    p.style.color = msg.color
+    if (msg.bg) p.style.background = msg.bg
+    if (msg.bold) p.style.fontWeight = '700'
+    if (msg.italic) p.style.fontStyle = 'italic'
+    if (msg.underline) p.style.textDecoration = 'underline'
     const only = Math.random() < POPUP.handOnlyChance ? (Math.random() < 0.5 ? 'left' : 'right') : null
     el.querySelector('.popup-close')!.textContent = only ? `Pinch with your ${only.toUpperCase()} to close this popup` : 'Pinch to close'
     document.body.appendChild(el)
@@ -123,17 +136,17 @@ export class Popups {
       }
     }
     const a = Math.random() * Math.PI * 2
-    const p: Popup = {
+    const popup: Popup = {
       el,
       x: Math.min(window.innerWidth - w, Math.max(0, x)),
       y: Math.min(window.innerHeight - h, Math.max(0, y)),
       vx: Math.cos(a) * d.drift,
       vy: Math.sin(a) * d.drift,
       only,
-      btn: new HoldButton(el, { gesture: 'pinch', hands: 1, holdMs: d.closeMs, onHold: () => this.close(p) }),
+      btn: new HoldButton(el, { gesture: 'pinch', hands: 1, holdMs: d.closeMs, onHold: () => this.close(popup) }),
     }
-    this.place(p)
-    this.list.push(p)
+    this.place(popup)
+    this.list.push(popup)
   }
 
   private place(p: Popup) {

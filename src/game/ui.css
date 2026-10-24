@@ -411,3 +411,52 @@ body.is-paused .core-canvas { opacity: 0.5; }
 }
 .popup-close::before { content: ''; position: absolute; inset: 0; width: calc(var(--progress) * 100%); background: rgba(245, 166, 35, 0.3); }
 .popup.hover { border-color: #ffd27a; }
+
+/* ---------- narrator ---------- */
+.narrator { position: fixed; z-index: 90; display: flex; align-items: flex-end; gap: 0; pointer-events: none; }
+.narrator[hidden] { display: none; }
+.nar-pic { height: 200px; width: auto; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6)); }
+.nar-box { position: relative; background: var(--frame); border: 2px solid var(--cyan); border-radius: 6px; padding: 16px 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); }
+.nar-name { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cyan); }
+.nar-text { font-family: var(--mono); font-size: 15px; line-height: 1.5; color: var(--text); }
+.nar-next { display: none; }
+
+/* in play: smaller card in the middle of the screen, clicks pass straight through */
+.narrator:not(.intro) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(560px, 90vw); }
+.narrator:not(.intro) .nar-pic { height: 120px; }
+.narrator:not(.intro) .nar-box { flex: 1; padding: 10px 14px; margin-bottom: 4px; }
+.narrator:not(.intro) .nar-text { font-size: 13px; min-height: 2.6em; }
+
+/* intro: big and centred over a dimmed screen */
+.narrator.intro { inset: 0; justify-content: center; align-items: center; gap: 12px; background: rgba(4, 6, 8, 0.78); pointer-events: auto; }
+.narrator.intro .nar-pic { height: min(46vh, 340px); }
+.narrator.intro .nar-box { width: min(560px, 48vw); min-height: 190px; padding: 22px 26px 64px; }
+.narrator.intro .nar-text { font-size: 18px; min-height: 6em; }
+.narrator.intro .nar-next {
+  --progress: 0;
+  display: block;
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  overflow: hidden;
+  padding: 10px 18px;
+  font: 700 14px var(--ui);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text);
+  background: var(--well);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.nar-next kbd { margin-left: 8px; font-family: var(--mono); font-size: 10px; color: var(--dim); }
+.nar-next::after { content: ''; position: absolute; left: 0; bottom: 0; height: 4px; width: calc(var(--progress) * 100%); background: var(--cyan); }
+.nar-next:hover, .nar-next.hover { border-color: var(--cyan); }
+
+/* bob while talking */
+.nar-pic { transform-origin: 50% 90%; }
+.narrator.talking .nar-pic { animation: nar-bob 0.42s ease-in-out infinite alternate; }
+@keyframes nar-bob {
+  from { transform: translateY(0) rotate(-2deg); }
+  to { transform: translateY(-10px) rotate(2deg); }
+}
