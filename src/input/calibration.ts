@@ -22,6 +22,11 @@ const visible = (h: HandState) => h.tracked && h.lostMs === 0
 // Call update() every frame; it returns the result once finished.
 export class Calibration {
   readonly el = document.createElement('div')
+  // Read-only progress for feedback (sounds): current step fill 0..1, whether it's
+  // filling right now, and how many steps have finished.
+  charge = 0
+  charging = false
+  stepsDone = 0
   private tracker: HandTracker
   private steps: Step[]
   private index = 0
@@ -95,9 +100,12 @@ export class Calibration {
 
     const step = this.steps[this.index]
     // Fill while the pose is right, drain twice as fast when it isn't.
-    this.heldMs = step.check(frame) ? this.heldMs + dt : Math.max(0, this.heldMs - dt * 2)
+    this.charging = step.check(frame)
+    this.heldMs = this.charging ? this.heldMs + dt : Math.max(0, this.heldMs - dt * 2)
+    this.charge = Math.min(1, this.heldMs / step.holdMs)
     if (this.heldMs >= step.holdMs) {
       step.onDone?.(frame)
+      this.stepsDone++
       this.next()
     }
 
@@ -110,6 +118,8 @@ export class Calibration {
   private next() {
     this.index++
     this.heldMs = 0
+    this.charge = 0
+    this.charging = false
     // One-handed players skip the "both hands" step.
     if (!this.twoHands && this.index === 1) this.index++
   }

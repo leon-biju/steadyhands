@@ -1,5 +1,6 @@
 import { startGame } from './game/index.ts'
 import { DifficultyPicker } from './game/difficulty.ts'
+import { ChargeSound } from './game/sounds.ts'
 import type { InputFrame } from './shared/types.ts'
 import { Calibration, HandLayer, HandTracker, HoldButton, WebcamView, createInputProvider, showInputError } from './input/index.ts'
 import { cursor } from './input/gestures.ts'
@@ -78,6 +79,7 @@ async function startInput() {
   let calibration = input instanceof HandTracker ? new Calibration(input) : null
   let picker: DifficultyPicker | null = calibration ? null : new DifficultyPicker()
   let controls: ReturnType<typeof setupHandControls> | null = null
+  const calibSounds = new ChargeSound()
   let last = performance.now()
 
   const tick = (now: number) => {
@@ -88,8 +90,10 @@ async function startInput() {
 
     if (calibration && calibration.update(frame)) {
       calibration = null
+      calibSounds.stop()
       picker = new DifficultyPicker()
     }
+    if (calibration) calibSounds.update(calibration.charge, calibration.charging, calibration.stepsDone, C.calibStepMs)
     const level = picker?.update(frame, dt)
     if (level) {
       picker = null

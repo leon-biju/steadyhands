@@ -137,3 +137,13 @@ export const POPUP = {
     'Placeholder: your shift report is overdue.',
   ],
 }
+
+export const SOUND = {
+  steamVolume: 0.6,
+  steamFadeIn: 0.05, // seconds
+  steamFadeOut: 0.3, // quick fade when the vent is let go
+  alarmVolume: 0.5,
+  alarmFadeOut: 0.4,
+  riserVolume: 0.7,
+  dingVolume: 0.7,
+}

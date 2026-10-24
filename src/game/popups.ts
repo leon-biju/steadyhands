@@ -5,6 +5,7 @@ import { HoldButton } from '../input/holdButton.ts'
 import { DIFFICULTY, POPUP, type Dist } from './config.ts'
 import type { ReactorSim } from './sim.ts'
 import type { GameUI } from './ui.ts'
+import { ChargeSound } from './sounds.ts'
 
 // Box-Muller, clamped
 function gauss(d: Dist) {
@@ -27,6 +28,8 @@ export class Popups {
   private timer = 0
   private sim: ReactorSim
   private ui: GameUI
+  private sound = new ChargeSound()
+  private closed = 0
 
   constructor(sim: ReactorSim, ui: GameUI) {
     this.sim = sim
@@ -41,6 +44,7 @@ export class Popups {
   reset() {
     for (const p of this.list) p.el.remove()
     this.list = []
+    this.sound.stop()
     this.timer = gauss(this.def.every)
   }
 
@@ -56,10 +60,13 @@ export class Popups {
 
   /** dt in ms */
   update(frame: InputFrame, dt: number) {
+    const d = this.def
     // clear on game over so they don't cover the restart button
     if (this.sim.state.melted && this.list.length) this.reset()
-    if (!this.sim.started || this.sim.state.melted || this.ui.paused) return
-    const d = this.def
+    if (!this.sim.started || this.sim.state.melted || this.ui.paused) {
+      this.sound.update(0, false, this.closed, d.closeMs)
+      return
+    }
 
     // easy only starts counting once the last one is closed
     if (d.maxOnScreen > 1 || this.list.length === 0) this.timer -= dt / 1000
@@ -82,6 +89,11 @@ export class Popups {
       const f = p.only ? { ...frame, [p.only === 'left' ? 'right' : 'left']: { ...frame[p.only === 'left' ? 'right' : 'left'], tracked: false } } : frame
       p.btn.update(f, dt)
     }
+
+    // riser while closing the furthest-along popup, ding when one closes
+    const holding = this.list.filter((p) => p.el.classList.contains('holding'))
+    const charge = Math.max(0, ...holding.map((p) => p.btn.progress))
+    this.sound.update(charge, holding.length > 0, this.closed, d.closeMs)
   }
 
   private spawn() {
@@ -129,6 +141,7 @@ export class Popups {
   }
 
   private close(p: Popup) {
+    this.closed++
     p.el.remove()
     this.list = this.list.filter((q) => q !== p)
   }
