@@ -23,17 +23,6 @@
       "underline": false
     },
     {
-      "text": "Did you know? Fusion is just fission's cooler cousin.",
-      "font": "Georgia, serif",
-      "size": 15,
-      "color": "#9be7ff",
-      "italic": true,
-      "title": "Notice",
-      "bg": "",
-      "bold": false,
-      "underline": false
-    },
-    {
       "text": "This popup is very important. Anyway, have a nice day.",
       "font": "'Times New Roman', serif",
       "size": 16,
@@ -45,32 +34,10 @@
       "underline": false
     },
     {
-      "text": "Congratulations! You are the 1,000,000th visitor to this reactor!",
-      "font": "'Arial Black', Gadget, sans-serif",
-      "size": 20,
-      "color": "#7dff7d",
-      "bg": "#3b1d5a",
-      "title": "WINNER",
-      "bold": false,
-      "italic": false,
-      "underline": false
-    },
-    {
       "text": "Please rate your meltdown experience from 1 to 5 stars.",
       "font": "'Trebuchet MS', sans-serif",
       "size": 15,
       "color": "#ffd27a",
-      "title": "Notice",
-      "bg": "",
-      "bold": false,
-      "italic": false,
-      "underline": false
-    },
-    {
-      "text": "We noticed you're pressing buttons. Please don't.",
-      "font": "'Courier New', monospace",
-      "size": 14,
-      "color": "#ff9f43",
       "title": "Notice",
       "bg": "",
       "bold": false,
@@ -100,7 +67,7 @@
       "underline": false
     },
     {
-      "text": "Click here to claim your free coolant*  (*no coolant included)",
+      "text": "Click here to claim your free stuff.",
       "font": "'Comic Sans MS', 'Comic Neue', cursive",
       "size": 17,
       "color": "#ff7ad9",
