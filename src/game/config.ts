@@ -37,7 +37,9 @@ export const SIM = {
   spikeMin: 6, // seconds between random pressure spikes
   spikeMax: 12,
   spikePressure: 60,
-  outputPerK: 16,
+  outputPerK: 10, // MW per MK
+  outputPerBar: 2, // MW per bar
+  outputStability: 0.2, // fraction of output lost at 0% stability
   outputTarget: 1500,
   meltdownRate: 7, // hidden meter, %/s per critical gauge
   meltdownDecay: 2.5,
@@ -74,6 +76,13 @@ export interface DifficultyDef {
   /** multiplies coolant + vent strength */
   controlMul: number
   wobbleMul: number
+  /** multiplies the core's own heat gain */
+  heatMul: number
+  /** multiplies pressure build-up (pressure per MK) */
+  pressureMul: number
+  /** random pressure spikes: size multiplier and how much faster they come */
+  spikeMul: number
+  spikeRateMul: number
   /** seconds between random temp/pressure jumps, null = none */
   jumpEvery: [number, number] | null
   jumpTemp: number // +/- MK
@@ -91,12 +100,16 @@ export interface DifficultyDef {
 export const DIFFICULTY: Record<Difficulty, DifficultyDef> = {
   easy: {
     label: 'Easy',
-    blurb: 'Standard reactor. The odd message.',
+    blurb: 'Hot reactor. Unstable core. The odd message.',
     controlMul: 1,
-    wobbleMul: 1,
-    jumpEvery: null,
-    jumpTemp: 0,
-    jumpPressure: 0,
+    wobbleMul: 1.5,
+    heatMul: 1.5,
+    pressureMul: 1.3,
+    spikeMul: 1.3,
+    spikeRateMul: 1.25,
+    jumpEvery: [5, 10],
+    jumpTemp: 8,
+    jumpPressure: 30,
     popups: {
       every: { mean: 15, sd: 2.5, min: 10, max: 20 },
       count: { mean: 1, sd: 0, min: 1, max: 1 },
@@ -110,10 +123,14 @@ export const DIFFICULTY: Record<Difficulty, DifficultyDef> = {
     label: 'Hard',
     blurb: 'Weak controls, erratic core, constant interruptions.',
     controlMul: 0.5,
-    wobbleMul: 2.2,
-    jumpEvery: [3, 7],
-    jumpTemp: 14,
-    jumpPressure: 45,
+    wobbleMul: 3,
+    heatMul: 2.6,
+    pressureMul: 1.9,
+    spikeMul: 1.9,
+    spikeRateMul: 1.8,
+    jumpEvery: [2.5, 5],
+    jumpTemp: 16,
+    jumpPressure: 55,
     popups: {
       every: { mean: 15, sd: 7, min: 0, max: 30 },
       count: { mean: 2.5, sd: 1, min: 1, max: 4 },
