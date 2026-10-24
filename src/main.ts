@@ -93,9 +93,12 @@ async function startInput() {
     const level = picker?.update(frame, dt)
     if (level) {
       picker = null
-      game.begin(level)
-      controls = setupHandControls()
+      game.narrator.intro(level, () => {
+        game.begin(level)
+        controls = setupHandControls()
+      })
     }
+    game.narrator.update(frame, dt)
     // keyboard still works as a fallback, so only take over the lever once the game starts
     controls?.(frame, dt)
     if (controls) game.popups.update(frame, dt)

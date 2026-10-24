@@ -129,11 +129,42 @@ export const POPUP = {
   width: 320,
   pickerHoldMs: 1200, // pinch hold to pick a difficulty
   handOnlyChance: 0.3, // chance a popup only closes with one specific hand (random left/right)
-  text: [
-    'PLACEHOLDER MESSAGE: this will say something important.',
-    'Placeholder: management would like a word.',
-    'Placeholder: please acknowledge this notice.',
-    'Placeholder: scheduled maintenance reminder.',
-    'Placeholder: your shift report is overdue.',
+  // message text and its font/size/colour live in popupMessages.json
+}
+
+// MrBeast narration. Intro is click-through before the shift starts; the rest are short
+// one-liners shown while playing.
+export const NARRATOR = {
+  name: 'MrBeast',
+  typeMsPerChar: 22,
+  nextHoldMs: 700, // pinch hold on "Next"
+  lineGapSec: 7, // min seconds between ambient lines
+  lineShowSec: 5.5, // ambient lines also stay up until he's done talking
+  voice: {
+    rate: 1.15,
+    pitch: 1.05,
+    // first match wins, falls back to any English voice
+    prefer: ['Google US English', 'Microsoft Guy', 'Microsoft Andrew', 'Alex', 'Daniel', 'English (America)'],
+  },
+  intro: [
+    "What's up guys, it's MrBeast! Welcome to the most dangerous challenge I've EVER made!",
+    "You're locked inside a real fusion reactor control room, and your job is simple: DON'T. LET. IT. EXPLODE.",
+    'Pinch the coolant lever and drag it down to cool the core. Pinch and hold the vent button to dump pressure. Watch those gauges!',
+    "If temperature or pressure sits in the red for too long... boom. You're out.",
+    "Oh, and my team is going to send you a LOT of annoying popups. Pinch and hold to close them. Yes, they'll land right on your controls. I'm not sorry.",
+    'Keep the grid output near the target to rack up points. Survive, and you win $10,000!',
   ],
+  introByDifficulty: {
+    easy: ["You picked EASY? That's okay, everybody starts somewhere. Ready? GO!"],
+    hard: ["You picked HARD?! Your controls are half as strong and the core is going crazy. Respect. You're gonna need it. GO!"],
+  },
+  warn: ["Temperature's climbing, use the coolant!", 'Things are heating up! Keep it under control!', "Pressure's getting high, hit that vent!"],
+  crit: ["IT'S IN THE RED! DO SOMETHING!", "We're about to blow! Pull the lever!!", 'This is NOT good! Cool it down NOW!'],
+  milestones: [
+    { at: 30, text: '30 seconds in and still alive! Most people are gone by now.' },
+    { at: 60, text: "ONE MINUTE! You're doing insane!" },
+    { at: 120, text: "TWO MINUTES?! Somebody get this person a trophy. And my $10,000." },
+    { at: 180, text: "Three minutes. I'm legitimately running out of money to give away." },
+  ],
+  melt: ["BOOM. And that's $10,000 you just watched explode. Let's go again!", "The reactor is gone! Don't worry, I've got another one. Try again!"],
 }
