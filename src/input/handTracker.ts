@@ -36,11 +36,22 @@ function lerp(a: Point, b: Point, t: number): Point {
   return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }
 }
 
+// Camera coords -> play-area coords, stretching the inner reach box to the full screen.
+function toPlayArea(p: Point): Point {
+  return {
+    x: (p.x - C.reachMarginX) / (1 - 2 * C.reachMarginX),
+    y: (p.y - C.reachMarginY) / (1 - 2 * C.reachMarginY),
+  }
+}
+
 // Webcam hand tracking via MediaPipe. Video frames are processed locally and never stored.
 export class HandTracker implements InputProvider {
   readonly video = document.createElement('video')
   // Detections per second, for the debug view.
   fps = 0
+  // Latest raw landmarks in camera coords (mirrored), for the webcam window.
+  cameraLandmarks: Record<HandSide, Point[]> = { left: [], right: [] }
+  swapHandedness = C.swapHandedness
 
   private landmarker: HandLandmarker | null = null
   private stream: MediaStream | null = null
@@ -105,6 +116,12 @@ export class HandTracker implements InputProvider {
     return this.frame
   }
 
+  // Called by calibration when the user's hands come out labelled backwards.
+  flipHandedness() {
+    this.swapHandedness = !this.swapHandedness
+    this.tracks = { left: newTrack('left'), right: newTrack('right') }
+  }
+
   private loop = () => {
     this.rafId = requestAnimationFrame(this.loop)
     const now = performance.now()
@@ -128,22 +145,25 @@ export class HandTracker implements InputProvider {
 
   private detect(now: number) {
     const result = this.landmarker!.detectForVideo(this.video, now)
-    const found: { side: HandSide; lm: Point[] }[] = result.landmarks.map((raw, i) => {
+    const found: { side: HandSide; cam: Point[] }[] = result.landmarks.map((raw, i) => {
       const label = result.handedness[i]?.[0]?.categoryName ?? 'Right'
       const isLeftLabel = label === 'Left'
-      const side: HandSide = isLeftLabel !== C.swapHandedness ? 'left' : 'right'
-      return { side, lm: raw.map((p) => ({ x: 1 - p.x, y: p.y })) }
+      const side: HandSide = isLeftLabel !== this.swapHandedness ? 'left' : 'right'
+      return { side, cam: raw.map((p) => ({ x: 1 - p.x, y: p.y })) }
     })
 
     // Handedness sometimes flips so both hands get the same label: fall back to screen position.
     if (found.length === 2 && found[0].side === found[1].side) {
-      found.sort((a, b) => a.lm[0].x - b.lm[0].x)
+      found.sort((a, b) => a.cam[0].x - b.cam[0].x)
       found[0].side = 'left'
       found[1].side = 'right'
     }
 
-    this.updateTrack(this.tracks.left, found.find((h) => h.side === 'left')?.lm ?? null, now)
-    this.updateTrack(this.tracks.right, found.find((h) => h.side === 'right')?.lm ?? null, now)
+    for (const side of ['left', 'right'] as const) {
+      const cam = found.find((h) => h.side === side)?.cam ?? null
+      this.cameraLandmarks[side] = cam ?? []
+      this.updateTrack(this.tracks[side], cam && cam.map(toPlayArea), now)
+    }
   }
 
   private updateTrack(t: Track, lm: Point[] | null, now: number) {

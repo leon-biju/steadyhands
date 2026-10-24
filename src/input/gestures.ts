@@ -1,4 +1,4 @@
-import type { Gesture, Point } from '../shared/types'
+import type { Gesture, HandState, Point } from '../shared/types'
 import { INPUT_CONFIG as C } from './config'
 
 // MediaPipe hand landmark indices
@@ -50,4 +50,9 @@ export function classify(lm: Point[], wasPinching: boolean): { gesture: Gesture;
   if (count === 0) return { gesture: 'fist', pinching }
   if (ext[0] && count === 1) return { gesture: 'point', pinching }
   return { gesture: 'none', pinching }
+}
+
+// Where a hand is "aiming": the pinch point while pinching, otherwise the index fingertip.
+export function cursor(hand: HandState): Point {
+  return hand.pinching ? hand.pinchPoint : hand.pointer
 }

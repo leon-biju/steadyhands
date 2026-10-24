@@ -1,26 +1,18 @@
-<!-- Just a debug file for the webcam tracking -->
 <!doctype html>
+<!-- Just a debug file for the webcam tracking -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>steadyhands input debug</title>
     <style>
-      html, body { margin: 0; height: 100%; background: #111; color: #eee; font: 14px/1.4 monospace; overflow: hidden; }
-      body { display: grid; place-items: center; }
-      /* Matches the 4:3 camera so landmarks line up with the video. */
-      #stage { position: relative; width: min(100vw, 133.33vh); aspect-ratio: 4 / 3; }
-      #stage video, #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
-      #stage video { transform: scaleX(-1); opacity: 0.6; }
-      #hud { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); padding: 8px 12px; border-radius: 6px; white-space: pre; }
-      #error { color: #ff6b6b; }
+      html, body { margin: 0; height: 100%; background: #070b10; color: #e6edf3; font-family: system-ui, sans-serif; overflow: hidden; }
+      #hud { position: fixed; left: 8px; bottom: 8px; z-index: 95; background: rgba(0,0,0,0.7); padding: 8px 12px; border-radius: 6px; font: 12px/1.4 monospace; white-space: pre; pointer-events: none; }
     </style>
   </head>
   <body>
-    <div id="stage">
-      <canvas id="overlay"></canvas>
-      <div id="hud">Loading…</div>
-    </div>
+    <div id="app"></div>
+    <div id="hud">Loading…</div>
     <script type="module" src="/src/input/debug.ts"></script>
   </body>
 </html>

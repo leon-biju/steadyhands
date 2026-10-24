@@ -1,13 +1,13 @@
 // Standalone page for testing hand tracking: /input-debug.html (?input=mouse for the fallback).
+// Flow: start input -> calibration (hands only) -> placeholder reactor panel.
+// Floating hands and the webcam window sit on top of everything; press H to toggle live numbers.
 import type { HandState } from '../shared/types'
-import { HandTracker, createInputProvider, drawHands } from './index'
+import type { CalibrationResult } from './index'
+import { Calibration, HandLayer, HandTracker, WebcamView, createInputProvider, showInputError } from './index'
+import { type DemoPanel, mountDemoPanel } from './demoPanel'
 
-const stage = document.getElementById('stage')!
-const canvas = document.getElementById('overlay') as HTMLCanvasElement
+const app = document.getElementById('app')!
 const hud = document.getElementById('hud')!
-const ctx = canvas.getContext('2d')!
-
-const input = createInputProvider(stage)
 
 function fmt(h: HandState): string {
   if (!h.tracked) return `${h.side.padEnd(5)}  --`
@@ -22,29 +22,49 @@ function fmt(h: HandState): string {
   ].join('  ')
 }
 
-function render() {
-  requestAnimationFrame(render)
-  const r = stage.getBoundingClientRect()
-  if (canvas.width !== r.width || canvas.height !== r.height) {
-    canvas.width = r.width
-    canvas.height = r.height
+async function main() {
+  const input = createInputProvider()
+  try {
+    await input.start()
+  } catch (e) {
+    hud.remove()
+    showInputError((e as Error).message)
+    return
   }
-  const frame = input.getFrame()
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  drawHands(ctx, frame)
 
-  const both = frame.left.pinching && frame.right.pinching
-  const fps = input instanceof HandTracker ? `  ${input.fps} fps` : ''
-  hud.textContent = [`source: ${frame.source}${fps}`, fmt(frame.left), fmt(frame.right), both ? 'TWO-HANDED PINCH' : ''].join('\n')
+  const hands = new HandLayer()
+  const webcam = input instanceof HandTracker ? new WebcamView(input) : null
+  let calibration = input instanceof HandTracker ? new Calibration(input) : null
+  let panel: DemoPanel | null = calibration ? null : mountDemoPanel(app, { twoHands: true })
+  let last = performance.now()
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'h' || e.key === 'H') hud.hidden = !hud.hidden
+  })
+
+  const tick = (now: number) => {
+    requestAnimationFrame(tick)
+    const dt = now - last
+    last = now
+    const frame = input.getFrame()
+
+    if (calibration) {
+      const result: CalibrationResult | null = calibration.update(frame)
+      if (result) {
+        calibration = null
+        panel = mountDemoPanel(app, result)
+      }
+    }
+    panel?.update(frame, dt)
+    hands.draw(frame)
+    webcam?.draw()
+
+    if (!hud.hidden) {
+      const both = frame.left.pinching && frame.right.pinching
+      hud.textContent = [`source: ${frame.source}  (H to hide)`, fmt(frame.left), fmt(frame.right), both ? 'TWO-HANDED PINCH' : ''].join('\n')
+    }
+  }
+  requestAnimationFrame(tick)
 }
 
-input
-  .start()
-  .then(() => {
-    if (input instanceof HandTracker) stage.prepend(input.video)
-    render()
-  })
-  .catch((e: Error) => {
-    hud.innerHTML = `<span id="error">${e.message}</span>`
-    console.error(e)
-  })
+main()

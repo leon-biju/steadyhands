@@ -1,8 +1,10 @@
 // Shared contract between src/input and src/game.
 // Don't change without asking both people.
 
-// Normalized coordinates: 0..1 across the camera view, origin top-left,
-// already mirrored so moving your hand right moves x right on screen.
+// Normalized coordinates: 0..1 across the play area (the whole screen), origin
+// top-left. Multiply by the screen width/height to get pixels. Already mirrored, so
+// moving your hand right moves x right, and scaled so you can reach the screen edges
+// without your hand leaving the camera view.
 export interface Point {
   x: number
   y: number
@@ -32,7 +34,7 @@ export interface HandState {
   // Wrist-to-middle-knuckle distance in normalized units. Grows as the hand
   // moves toward the camera, useful for push detection.
   size: number
-  // 21 MediaPipe landmarks (normalized, mirrored), empty when not tracked.
+  // 21 MediaPipe landmarks in play-area coords, empty when not tracked.
   landmarks: Point[]
 }
 
