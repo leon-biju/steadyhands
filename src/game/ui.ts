@@ -124,6 +124,8 @@ export interface GameUI {
   /** drive the coolant lever directly (0..1); null lets it spring back */
   setLever(amount: number | null): void
   hitTest(x: number, y: number): HTMLElement | null
+  /** called after Reset / Restart */
+  onRestart?: () => void
 }
 
 export function createUI(root: HTMLElement, sim: ReactorSim): GameUI {
@@ -251,6 +253,7 @@ export function createUI(root: HTMLElement, sim: ReactorSim): GameUI {
     sim.reset()
     leverAmt = 0
     overlay.hidden = true
+    ui.onRestart?.()
   }
   $('[data-act="reset"]').addEventListener('click', restart)
   $('[data-act="restart"]').addEventListener('click', restart)

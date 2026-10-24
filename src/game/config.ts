@@ -57,3 +57,82 @@ export const REACTOR = {
   bpmMax: 150,
   sparks: 60,
 }
+
+export type Difficulty = 'easy' | 'hard'
+
+/** normal distribution, clamped to [min, max] */
+export interface Dist {
+  mean: number
+  sd: number
+  min: number
+  max: number
+}
+
+export interface DifficultyDef {
+  label: string
+  blurb: string
+  /** multiplies coolant + vent strength */
+  controlMul: number
+  wobbleMul: number
+  /** seconds between random temp/pressure jumps, null = none */
+  jumpEvery: [number, number] | null
+  jumpTemp: number // +/- MK
+  jumpPressure: number // + bar
+  popups: {
+    every: Dist // seconds between spawns
+    count: Dist // popups per spawn
+    maxOnScreen: number
+    closeMs: number // pinch hold to close
+    onControlsChance: number // chance to spawn right on the lever / vent
+    drift: number // px/s
+  }
+}
+
+export const DIFFICULTY: Record<Difficulty, DifficultyDef> = {
+  easy: {
+    label: 'Easy',
+    blurb: 'Standard reactor. The odd message.',
+    controlMul: 1,
+    wobbleMul: 1,
+    jumpEvery: null,
+    jumpTemp: 0,
+    jumpPressure: 0,
+    popups: {
+      every: { mean: 15, sd: 2.5, min: 10, max: 20 },
+      count: { mean: 1, sd: 0, min: 1, max: 1 },
+      maxOnScreen: 1,
+      closeMs: 400,
+      onControlsChance: 0.3,
+      drift: 0,
+    },
+  },
+  hard: {
+    label: 'Hard',
+    blurb: 'Weak controls, erratic core, constant interruptions.',
+    controlMul: 0.5,
+    wobbleMul: 2.2,
+    jumpEvery: [3, 7],
+    jumpTemp: 14,
+    jumpPressure: 45,
+    popups: {
+      every: { mean: 15, sd: 7, min: 0, max: 30 },
+      count: { mean: 2.5, sd: 1, min: 1, max: 4 },
+      maxOnScreen: 10,
+      closeMs: 1200,
+      onControlsChance: 0.5,
+      drift: 40,
+    },
+  },
+}
+
+export const POPUP = {
+  width: 320,
+  pickerHoldMs: 1200, // pinch hold to pick a difficulty
+  text: [
+    'PLACEHOLDER MESSAGE: this will say something important.',
+    'Placeholder: management would like a word.',
+    'Placeholder: please acknowledge this notice.',
+    'Placeholder: scheduled maintenance reminder.',
+    'Placeholder: your shift report is overdue.',
+  ],
+}

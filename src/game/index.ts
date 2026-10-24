@@ -2,10 +2,14 @@ import './ui.css'
 import { ReactorSim } from './sim.ts'
 import { ReactorView } from './reactor.ts'
 import { createUI, type GameUI } from './ui.ts'
+import { Popups } from './popups.ts'
+import type { Difficulty } from './config.ts'
 
-export function startGame(root: HTMLElement): { sim: ReactorSim; ui: GameUI } {
+export function startGame(root: HTMLElement): { sim: ReactorSim; ui: GameUI; popups: Popups; begin(d: Difficulty): void } {
   const sim = new ReactorSim()
   const ui = createUI(root, sim)
+  const popups = new Popups(sim, ui)
+  ui.onRestart = () => popups.reset()
   const view = new ReactorView(ui.canvas)
 
   let last = performance.now()
@@ -18,5 +22,11 @@ export function startGame(root: HTMLElement): { sim: ReactorSim; ui: GameUI } {
     requestAnimationFrame(frame)
   }
   requestAnimationFrame(frame)
-  return { sim, ui }
+  const begin = (d: Difficulty) => {
+    sim.difficulty = d
+    sim.reset()
+    sim.started = true
+    popups.reset()
+  }
+  return { sim, ui, popups, begin }
 }

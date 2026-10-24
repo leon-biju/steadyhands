@@ -1,4 +1,5 @@
 import { startGame } from './game/index.ts'
+import { DifficultyPicker } from './game/difficulty.ts'
 import type { InputFrame } from './shared/types.ts'
 import { Calibration, HandLayer, HandTracker, HoldButton, WebcamView, createInputProvider, showInputError } from './input/index.ts'
 import { cursor } from './input/gestures.ts'
@@ -34,10 +35,11 @@ function setupHandControls() {
   let leverHand: 'left' | 'right' | null = null
 
   return (frame: InputFrame, dt: number) => {
-    const hands = [frame.left, frame.right]
+    // popups block whatever is under them
+    const hands = [frame.left, frame.right].filter((h) => !game.popups.covers(h.pinchPoint))
 
     // lever: grabbed by a pinch on the handle, follows that hand until it lets go
-    if (leverHand && !(frame[leverHand].tracked && frame[leverHand].pinching)) leverHand = null
+    if (leverHand && !(frame[leverHand].tracked && frame[leverHand].pinching && hands.includes(frame[leverHand]))) leverHand = null
     if (!leverHand) {
       const grab = hands.find((h) => h.tracked && h.pinching && inside(leverBody, h.pinchPoint))
       if (grab) leverHand = grab.side
@@ -74,7 +76,8 @@ async function startInput() {
   const hands = new HandLayer()
   const webcam = input instanceof HandTracker ? new WebcamView(input) : null
   let calibration = input instanceof HandTracker ? new Calibration(input) : null
-  let controls: ReturnType<typeof setupHandControls> | null = calibration ? null : setupHandControls()
+  let picker: DifficultyPicker | null = calibration ? null : new DifficultyPicker()
+  let controls: ReturnType<typeof setupHandControls> | null = null
   let last = performance.now()
 
   const tick = (now: number) => {
@@ -85,10 +88,17 @@ async function startInput() {
 
     if (calibration && calibration.update(frame)) {
       calibration = null
+      picker = new DifficultyPicker()
+    }
+    const level = picker?.update(frame, dt)
+    if (level) {
+      picker = null
+      game.begin(level)
       controls = setupHandControls()
     }
-    // keyboard still works as a fallback, so only take over the lever once calibrated
-    if (!calibration) controls?.(frame, dt)
+    // keyboard still works as a fallback, so only take over the lever once the game starts
+    controls?.(frame, dt)
+    if (controls) game.popups.update(frame, dt)
     hands.draw(frame)
     webcam?.draw()
   }

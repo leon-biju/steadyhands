@@ -1,6 +1,6 @@
 // PLACEHOLDER reactor sim, just enough to make the UI move.
 // The UI reads `state` and `score`, writes `controls`, and calls reset().
-import { GAUGES, SIM, type GaugeKey } from './config.ts'
+import { DIFFICULTY, GAUGES, SIM, type Difficulty, type GaugeKey } from './config.ts'
 
 export type Level = 'ok' | 'warn' | 'crit'
 
@@ -55,9 +55,13 @@ export class ReactorSim {
   state: ReactorState = fresh()
   controls: Controls = { coolant: 0, vent: false }
   score = 0
+  difficulty: Difficulty = 'easy'
+  /** held until a difficulty is picked */
+  started = false
 
   private wobble = 0
   private nextSpike = SIM.spikeMax
+  private nextJump = 0
 
   reset() {
     this.state = fresh()
@@ -65,6 +69,12 @@ export class ReactorSim {
     this.controls.vent = false
     this.score = 0
     this.nextSpike = SIM.spikeMax
+    this.nextJump = this.rollJump()
+  }
+
+  private rollJump() {
+    const j = DIFFICULTY[this.difficulty].jumpEvery
+    return j ? j[0] + Math.random() * (j[1] - j[0]) : Infinity
   }
 
   visuals(): ReactorVisuals {
@@ -80,20 +90,30 @@ export class ReactorSim {
 
   update(dt: number) {
     const s = this.state
-    if (s.melted) return
+    if (s.melted || !this.started) return
     const c = this.controls
+    const d = DIFFICULTY[this.difficulty]
     s.time += dt
 
     this.wobble = (this.wobble + (Math.random() - 0.5) * dt * 6) * 0.985
+    const wobble = this.wobble * d.wobbleMul
 
-    let dT = SIM.heatDrift + this.wobble * 4 - SIM.ambientLoss * (s.temperature - SIM.ambientTemp)
-    dT -= SIM.coolRate * c.coolant
-    if (c.vent) dT -= SIM.ventCooling
+    let dT = SIM.heatDrift + wobble * 4 - SIM.ambientLoss * (s.temperature - SIM.ambientTemp)
+    dT -= SIM.coolRate * c.coolant * d.controlMul
+    if (c.vent) dT -= SIM.ventCooling * d.controlMul
     s.temperature = clamp(s.temperature + dT * dt, 0, GAUGES.temperature.max)
 
-    const pTarget = s.temperature * SIM.pressurePerK + this.wobble * 30
+    const pTarget = s.temperature * SIM.pressurePerK + wobble * 30
     s.pressure += (pTarget - s.pressure) * SIM.pressureFollow * dt
-    if (c.vent) s.pressure -= SIM.ventRate * dt
+    if (c.vent) s.pressure -= SIM.ventRate * d.controlMul * dt
+
+    // hard: erratic jumps
+    this.nextJump -= dt
+    if (this.nextJump <= 0) {
+      s.temperature = clamp(s.temperature + (Math.random() * 2 - 1) * d.jumpTemp, 0, GAUGES.temperature.max)
+      s.pressure += d.jumpPressure * (0.5 + Math.random() * 0.5)
+      this.nextJump = this.rollJump()
+    }
     this.nextSpike -= dt
     if (this.nextSpike <= 0) {
       s.pressure += SIM.spikePressure
