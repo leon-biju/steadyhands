@@ -119,3 +119,7 @@
 .input-error a {
   color: #4fc3f7;
 }
+
+/* Hold-to-activate feedback for game buttons driven by HoldButton. */
+.btn.hover { filter: brightness(1.3); }
+.btn.holding, .btn.done { background-image: linear-gradient(90deg, rgba(255,255,255,0.35) calc(var(--progress, 0) * 100%), transparent 0); }
