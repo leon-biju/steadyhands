@@ -11,7 +11,7 @@ type PopupMessage = (typeof messages.messages)[number]
 import { ChargeSound } from './sounds.ts'
 
 // Box-Muller, clamped
-function gauss(d: Dist) {
+export function gauss(d: Dist) {
   const n = Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random())
   return Math.min(d.max, Math.max(d.min, d.mean + n * d.sd))
 }

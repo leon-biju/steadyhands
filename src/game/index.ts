@@ -4,14 +4,19 @@ import { ReactorView } from './reactor.ts'
 import { createUI, type GameUI } from './ui.ts'
 import { Popups } from './popups.ts'
 import { Narrator } from './narrator.ts'
-import type { Difficulty } from './config.ts'
+import { LIGHTS_OUT, type Difficulty } from './config.ts'
 import { GameSounds } from './sounds.ts'
+import { LightsOut } from './lightsOut.ts'
 
-export function startGame(root: HTMLElement): { sim: ReactorSim; ui: GameUI; popups: Popups; narrator: Narrator; begin(d: Difficulty): void } {
+export function startGame(root: HTMLElement): { sim: ReactorSim; ui: GameUI; popups: Popups; narrator: Narrator; lightsOut: LightsOut; begin(d: Difficulty): void } {
   const sim = new ReactorSim()
   const ui = createUI(root, sim)
   const popups = new Popups(sim, ui)
-  ui.onRestart = () => popups.reset()
+  const lightsOut = new LightsOut(sim, ui)
+  ui.onRestart = () => {
+    popups.reset()
+    lightsOut.reset()
+  }
   const narrator = new Narrator(sim)
   const view = new ReactorView(ui.canvas)
   const sounds = new GameSounds()
@@ -21,7 +26,8 @@ export function startGame(root: HTMLElement): { sim: ReactorSim; ui: GameUI; pop
     const dt = Math.min(0.05, (now - last) / 1000)
     last = now
     ui.update(dt)
-    if (!ui.paused) sim.update(dt)
+    // the reactor slows down (but doesn't stop) while you're in a minigame
+    if (!ui.paused) sim.update(lightsOut.active ? dt * LIGHTS_OUT.simSpeed : dt)
     view.render(ui.paused ? dt * 0.15 : dt, sim.visuals())
     const s = sim.state
     const critical = s.melted || levelOf('temperature', s.temperature) === 'crit' || levelOf('pressure', s.pressure) === 'crit'
@@ -34,6 +40,7 @@ export function startGame(root: HTMLElement): { sim: ReactorSim; ui: GameUI; pop
     sim.reset()
     sim.started = true
     popups.reset()
+    lightsOut.reset()
   }
-  return { sim, ui, popups, narrator, begin }
+  return { sim, ui, popups, narrator, lightsOut, begin }
 }

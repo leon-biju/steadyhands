@@ -195,3 +195,26 @@ export const SOUND = {
   riserVolume: 0.7,
   dingVolume: 0.7,
 }
+
+// "Lights Out" horror minigame: power cuts, your open palm is a flashlight, find the breaker and
+// hold a fist on it. Partway through something appears and you have to hold perfectly still.
+export const LIGHTS_OUT = {
+  every: { easy: { mean: 55, sd: 10, min: 40, max: 75 }, hard: { mean: 40, sd: 10, min: 25, max: 60 } } as Record<Difficulty, Dist>,
+  firstAfter: 25, // seconds into a shift before the first one can happen
+  simSpeed: 0.3, // reactor keeps running this fast while you're in the dark
+  flickerMs: 900, // lights stutter before going out / coming back
+  timeLimitMs: 18000, // breaker not found by then = it gets you anyway
+  beamRadius: 0.16, // open palm torch, fraction of screen height
+  dimRadius: 0.05, // any other pose: faint glow
+  breakerSize: 70, // px
+  breakerHoldMs: 1200, // fist on the breaker
+  breakerMargin: 0.12, // keep the breaker this far from the screen edges (fraction)
+  freezeAfterMs: [2500, 6000] as [number, number], // when the thing shows up after the lights go
+  freezeMs: 3500, // how long you have to stay still
+  freezeGraceMs: 500, // reaction time before movement counts
+  moveLimit: 0.12, // smoothed hand speed in screen-widths/s that counts as moving
+  moveSmoothMs: 150,
+  scareMs: 1100,
+  scarePenalty: 25, // added to the hidden meltdown meter
+  volume: 0.6,
+}

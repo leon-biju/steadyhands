@@ -460,3 +460,7 @@ body.is-paused .core-canvas { opacity: 0.5; }
   from { transform: translateY(0) rotate(-2deg); }
   to { transform: translateY(-10px) rotate(2deg); }
 }
+
+/* ---------- lights out minigame ---------- */
+/* above popups, narrator and the webcam window, below the floating hands */
+.lights-out { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 95; pointer-events: none; }
